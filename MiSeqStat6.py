@@ -50,6 +50,9 @@ args = args_commandline.__dict__
 project_name =  args["runno"]
 organism = args["bact"][0]
 
+#exit(0)
+
+
 #Modif_20190515
 lspq_miseq_experimental_dir = "1_Experimental"
 lspq_miseq_sequencebrute_dir = "2_SequencesBrutes"
@@ -66,7 +69,7 @@ temp_dir = "/home/foueri01@inspq.qc.ca/temp/TEMP_FASTQ"
 #***********************************************************    INSPQ-9788 ***********************************************************
 #rScript = "/home/ericf/ProjetProgrammation/ProjetR/ComputeReadsStat2.R"
 #***********************************************************    slbio ***********************************************************
-rScript = "/home/foueri01@inspq.qc.ca/ProjetPersonnel/Programmation/ProjetR/ComputeReadsStat2.R"
+rScript = "/home/foueri01@inspq.qc.ca/GitScript/MiSeqRunQuality/ComputeReadsStat2.R"
 
 
 if not os.path.isdir(temp_dir):
