@@ -14,6 +14,7 @@ import stat
 import shutil
 from interop import py_interop_run_metrics, py_interop_run, py_interop_summary
 import pandas as pd
+import yaml
 """
 Eric Fournier
 2019-03-26
@@ -22,13 +23,14 @@ Programme permettant de calculer les metrics d'une run MiSeq
 
 Example de commande sur slbio
 /usr/bin/python MiSeqStat6.py --help
-/usr/bin/python MiSeqStat6.py  --runno TESTINTEROP --bact salmonella
+/usr/bin/python MiSeqStat6.py  --runno TESTINTEROP --bact salmonella --param path_to_yaml_file
 
 Liste de modifications
 - Modif_20190514: Eric Fournier 2019-05-14 => changer le repertoire FASTQ dans lequel se trouve les sequence brutes sur LSPQ_MiSeq. 2_SequencesBrutes au lieu de FASTQ 
 
 - Modif_20190515: Eric Fournier 2019-05-15 => changer le repertoire dans lequel se trouve InterOp, RunInfo.xml, run Parameters.xml et le fichier de resultats pour /mnt/Partage/LSPQ_MiSeq/RunName/3_Analyse
 
+-Modif_20190625: Eric FOurnier 2019-06-25 => ajouter l option --param pour lire le fichier de parametre contenant les path
 """
 
 
@@ -44,19 +46,31 @@ genome_length_map = {"listeria":3000000,"salmonella":5000000,"ecoli":5000000}
 parser = argparse.ArgumentParser(description="Calculateur des statistique de runs MiSeq")
 parser.add_argument("-r","--runno",help="Nom de la run dans S/Partage/LSPQ_MiSeq",required=True)
 parser.add_argument("-b","--bact",help="Organisme analysé",nargs=1,type=str,choices=genome_length_map.keys(),required=True)
+parser.add_argument("-p","--param",help="path vers le fichier de parametre",required=True)
 
 args_commandline = parser.parse_args(sys.argv[1:])
 args = args_commandline.__dict__
 project_name =  args["runno"]
 organism = args["bact"][0]
+path_param_file = args["param"]
 
 #exit(0)
 
+snakemake_param_handle = open(path_param_file)
+all_dict = yaml.load(snakemake_param_handle)
+snakemake_param_handle.close()
 
 #Modif_20190515
+#Modif_20190625
+'''
 lspq_miseq_experimental_dir = "1_Experimental"
 lspq_miseq_sequencebrute_dir = "2_SequencesBrutes"
 lspq_miseq_analyse_dir = "3_Analyse"
+'''
+lspq_miseq_experimental_dir = all_dict["lspq_miseq_subdir"][0]
+lspq_miseq_sequencebrute_dir = all_dict["lspq_miseq_subdir"][1]
+lspq_miseq_analyse_dir = all_dict["lspq_miseq_subdir"][2]
+
 
 
 #Repertoire local temporaire pour les calculs
@@ -79,7 +93,9 @@ else:
     os.system("mkdir {0}".format(temp_dir))
 
 #Repertoire de la run
-basedir = os.path.join("/mnt/Partage/LSPQ_MiSeq/",project_name)
+#Modif_20190625
+#basedir = os.path.join("/mnt/Partage/LSPQ_MiSeq/",project_name)
+basedir = os.path.join(all_dict["path"][0],project_name)
 
 #Quelques check-up
 if not os.path.isdir(basedir):
