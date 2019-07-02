@@ -40,18 +40,19 @@ logging.basicConfig(level=logging.INFO)
 
 ##################################  Global Var #################################
 
-genome_length_map = {"listeria":3000000,"salmonella":5000000,"ecoli":5000000}
-
 #Parsing de la ligne de commande
 parser = argparse.ArgumentParser(description="Calculateur des statistique de runs MiSeq")
 parser.add_argument("-r","--runno",help="Nom de la run dans S/Partage/LSPQ_MiSeq",required=True)
-parser.add_argument("-b","--bact",help="Organisme analysé",nargs=1,type=str,choices=genome_length_map.keys(),required=True)
+
+#Taille du genome
+parser.add_argument("-g","--gl",help="Taille de genome",required=True)
+
 parser.add_argument("-p","--param",help="path vers le fichier de parametre",required=True)
 
 args_commandline = parser.parse_args(sys.argv[1:])
 args = args_commandline.__dict__
 project_name =  args["runno"]
-organism = args["bact"][0]
+genome_length = int(args["gl"])
 path_param_file = args["param"]
 
 #exit(0)
@@ -160,7 +161,7 @@ def ComputeGenomeCoverage(specname,nBnucleotid):
     #print specname, " ",nBnucleotid, " ",allspec_cov_dict[specname][0]
     nBnucleotid_r1_r2 = float(nBnucleotid) + float(allspec_cov_dict[specname][0])
 
-    cov = round(nBnucleotid_r1_r2 / genome_length_map[organism],0)
+    cov = round(nBnucleotid_r1_r2 / genome_length, 0)
 
     allspec_cov_dict[specname].append(cov)
 
