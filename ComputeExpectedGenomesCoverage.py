@@ -8,7 +8,7 @@ Calculs des couvertures de genome estimees selon la taille de genome de l organi
 
 """
 
-run_path, project_path, ref_file, lspq_miseq_run_path, genome_cov_file, lspq_analyses_dir, lspq_fastqbrut_dir = sys.argv[1:8]
+run_path, project_path, ref_file, lspq_miseq_run_path, genome_cov_file, slbio_fastqbrut_dir = sys.argv[1:8]
 
 '''
 run_path est le path slbio de la run
@@ -16,8 +16,7 @@ project_path est le path slbio du project
 ref_file est le path slbio vers le fichier contenant les tailles des genomes de reference
 lspq_miseq_run_path est le path LSPQ_MISEQ de la run
 genome_cov_file est le fichier de sortie avec les couvetures
-lspq_analyses_dir est le sous repertoire 3_Analyse du la run sur LSPQ_MISEQ
-lspq_fastqbrut_dir est le sous repertoire 1_FASTQ_BRUT du projet
+slbio_fastqbrut_dir est le sous repertoire 1_FASTQ_BRUT du projet
 
 '''
 
@@ -46,7 +45,7 @@ sample_sheet_handle = open(os.path.join(project_path,os.path.basename(run_path[:
 sample_sheet_handle.readline()
 
 #le fichier contenant les nombres de reads
-read_count_file = os.path.join(project_path,lspq_fastqbrut_dir,'ReadCount.txt')
+read_count_file = os.path.join(project_path,slbio_fastqbrut_dir,'ReadCount.txt')
 
 
 for line in sample_sheet_handle:
@@ -59,8 +58,9 @@ for line in sample_sheet_handle:
 
     #taille du genome de reference de cet organisme
     try:
-        cmd_2 = "sed -n '/{0}/Ip' ".format(organism) + ref_file + " | awk 'BEGIN{FS=\"\t\"}NR==1{print $2*1000000}'"
+        cmd_2 = "sed -n '/^\"{0}[ \"]/Ip' ".format(organism) + ref_file + " | awk 'BEGIN{FS=\"\t\"}NR==1{print $2*1000000}'"
         genome_length = subprocess.check_output(cmd_2, shell=True)
+        int_val = int(genome_length)
     except:
         genome_length = 0
 
