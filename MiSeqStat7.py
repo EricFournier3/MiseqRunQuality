@@ -17,20 +17,11 @@ import pandas as pd
 import yaml
 """
 Eric Fournier
-2019-03-26
+2019-07-12
 
 Programme permettant de calculer les metrics d'une run MiSeq
 
-Example de commande sur slbio
-/usr/bin/python MiSeqStat6.py --help
-/usr/bin/python MiSeqStat6.py  --runno TESTINTEROP --bact salmonella --param path_to_yaml_file
 
-Liste de modifications
-- Modif_20190514: Eric Fournier 2019-05-14 => changer le repertoire FASTQ dans lequel se trouve les sequence brutes sur LSPQ_MiSeq. 2_SequencesBrutes au lieu de FASTQ 
-
-- Modif_20190515: Eric Fournier 2019-05-15 => changer le repertoire dans lequel se trouve InterOp, RunInfo.xml, run Parameters.xml et le fichier de resultats pour /mnt/Partage/LSPQ_MiSeq/RunName/3_Analyse
-
--Modif_20190625: Eric FOurnier 2019-06-25 => ajouter l option --param pour lire le fichier de parametre contenant les path
 """
 
 
@@ -43,16 +34,11 @@ logging.basicConfig(level=logging.INFO)
 #Parsing de la ligne de commande
 parser = argparse.ArgumentParser(description="Calculateur des statistique de runs MiSeq")
 parser.add_argument("-r","--runno",help="Nom de la run dans S/Partage/LSPQ_MiSeq",required=True)
-
-#Taille du genome
-parser.add_argument("-g","--gl",help="Taille de genome",required=True)
-
 parser.add_argument("-p","--param",help="path vers le fichier de parametre",required=True)
 
 args_commandline = parser.parse_args(sys.argv[1:])
 args = args_commandline.__dict__
 project_name =  args["runno"]
-genome_length = int(args["gl"])
 path_param_file = args["param"]
 
 #exit(0)
@@ -61,29 +47,15 @@ snakemake_param_handle = open(path_param_file)
 all_dict = yaml.load(snakemake_param_handle)
 snakemake_param_handle.close()
 
-#Modif_20190515
-#Modif_20190625
-'''
-lspq_miseq_experimental_dir = "1_Experimental"
-lspq_miseq_sequencebrute_dir = "2_SequencesBrutes"
-lspq_miseq_analyse_dir = "3_Analyse"
-'''
 lspq_miseq_experimental_dir = all_dict["lspq_miseq_subdir"][0]
-lspq_miseq_sequencebrute_dir = all_dict["lspq_miseq_subdir"][1]
-lspq_miseq_analyse_dir = all_dict["lspq_miseq_subdir"][2]
+lspq_miseq_miseqruntrace_dir = all_dict["lspq_miseq_subdir"][1]
+lspq_miseq_sequencebrute_dir = all_dict["lspq_miseq_subdir"][2]
+lspq_miseq_analyse_dir = all_dict["lspq_miseq_subdir"][3]
 
 
 
 #Repertoire local temporaire pour les calculs
-#***********************************************************   INSPQ-9788 ***********************************************************
-#temp_dir = "/home/ericf/TEMP_FASTQ"
-#***********************************************************   slbio ***********************************************************
 temp_dir = "/home/foueri01@inspq.qc.ca/temp/TEMP_FASTQ"
-
-#Script R qui calcule les metrics
-#***********************************************************    INSPQ-9788 ***********************************************************
-#rScript = "/home/ericf/ProjetProgrammation/ProjetR/ComputeReadsStat2.R"
-#***********************************************************    slbio ***********************************************************
 rScript = "/home/foueri01@inspq.qc.ca/GitScript/MiSeqRunQuality/ComputeReadsStat2.R"
 
 
@@ -94,8 +66,6 @@ else:
     os.system("mkdir {0}".format(temp_dir))
 
 #Repertoire de la run
-#Modif_20190625
-#basedir = os.path.join("/mnt/Partage/LSPQ_MiSeq/",project_name)
 basedir = os.path.join(all_dict["path"][0],project_name)
 
 #Quelques check-up
@@ -103,16 +73,13 @@ if not os.path.isdir(basedir):
     logging.error(basedir + " est inexistant")
     exit(0)
 
-#Modif_20190514
 #Repertoire contenant les fastq
-#fastq_dir = os.path.join(basedir,"FASTQ")
 fastq_dir = os.path.join(basedir,lspq_miseq_sequencebrute_dir)
 if not os.path.isdir(fastq_dir):
     logging.error(fastq_dir + " est inexistant")
     exit(0)
 
-#Modif_20190515
-interop_dir = os.path.join(basedir,lspq_miseq_analyse_dir,"InterOp")
+interop_dir = os.path.join(basedir,lspq_miseq_miseqruntrace_dir,"InterOp")
 if not os.path.join(basedir,interop_dir):
     logging.error(interop_dir + " est inexistant")
     exit(0)
@@ -123,16 +90,14 @@ if not os.listdir(fastq_dir):
     exit(0)
 
 #Le fichier  RunInfo.xml
-#Modif_20190515
-runinfo_file = os.path.join(basedir,lspq_miseq_analyse_dir,"RunInfo.xml")
-print "run info ", runinfo_file
+runinfo_file = os.path.join(basedir,lspq_miseq_miseqruntrace_dir,"RunInfo.xml")
+#print "run info ", runinfo_file
 if not os.path.isfile(runinfo_file):
     logging.error("Le fichier {0} est absent".format(runinfo_file))
     exit(0)
 
 #Le fichier runParameters.xml
-#Modif_20190515
-runparam_file = os.path.join(basedir,lspq_miseq_analyse_dir,"runParameters.xml")
+runparam_file = os.path.join(basedir,lspq_miseq_miseqruntrace_dir,"runParameters.xml")
 if not os.path.isfile(runinfo_file):
     logging.error("Le fichier {0} est absent".format(runparam_file))
     exit(0)
@@ -158,7 +123,6 @@ def ComputeGenomeCoverage(specname,nBnucleotid):
     :param specname:
     :param nBnucleotid:
     """
-    #print specname, " ",nBnucleotid, " ",allspec_cov_dict[specname][0]
     nBnucleotid_r1_r2 = float(nBnucleotid) + float(allspec_cov_dict[specname][0])
 
     cov = round(nBnucleotid_r1_r2 / genome_length, 0)
@@ -176,8 +140,8 @@ logging.info("              Calcul des metrics de la run")
 
 #Recuperation du Q30 pour la run
 run_metrics = py_interop_run_metrics.run_metrics()
-#Modif_20190515
-run_folder = run_metrics.read(os.path.join(basedir,lspq_miseq_analyse_dir))
+
+run_folder = run_metrics.read(os.path.join(basedir,lspq_miseq_miseqruntrace_dir))
 summary = py_interop_summary.run_summary()
 py_interop_summary.summarize_run_metrics(run_metrics, summary)
 summary.total_summary().yield_g()
@@ -191,7 +155,6 @@ for label, func in columns:
 
 parse_d = re.search(r'Total\s{4}(\S+)',str(d[0]))
 percent_gt_q30 = round(float(parse_d.group(1)),0)
-#print percent_gt_q30
 
 #Recuperation des valeurs de cluster pour la run
 def format_value(val):
@@ -217,9 +180,6 @@ density = round(float(density) / 1000,0)
 parse_percent_pf = re.search(r'\S+\s{4}(\S+)',percent_pf)
 percent_pf = parse_percent_pf.group(1)
 percent_pf = round(float(percent_pf),0)
-
-#print density
-#print percent_pf
 
 #Calculs des Q30 pour les samples avec R
 logging.info("              Calcul des metrics des samples dans R")
@@ -249,7 +209,8 @@ try:
 
         if spec_name in allspec_cov_dict.keys():
             pass
-            ComputeGenomeCoverage(spec_name,nb_nucleotid)
+            #OBSOLETE
+            #ComputeGenomeCoverage(spec_name,nb_nucleotid)
         elif spec_name.find("RUN") == -1:
             allspec_cov_dict[spec_name] = [nb_nucleotid]
 
@@ -280,16 +241,13 @@ outfile.close()
 sortfile = os.path.join(temp_dir,"MiSeqStat_" + project_name + ".txt")
 os.system("awk 'NR<2{print $0;next}{print $0 | \"sort -k1\" }' " + outfile.name + "> " + sortfile)
 
-#On ajoute les valeurs de couverture
-outfile_append.write("\nID\tCoverage\n")
-for my_spec_name in allspec_cov_dict.keys():
-    outfile_append.write("{0}\t{1}\n".format(my_spec_name,allspec_cov_dict[my_spec_name][1]))
+#On ajoute les valeurs de couverture OBSOLETE
+#outfile_append.write("\nID\tCoverage\n")
+#for my_spec_name in allspec_cov_dict.keys():
+#    outfile_append.write("{0}\t{1}\n".format(my_spec_name,allspec_cov_dict[my_spec_name][1]))
+#outfile_append.close()
 
-outfile_append.close()
-
-#print allspec_cov_dict
-#Modif_20190515
-os.system("sudo cp {0} {1}".format(sortfile,os.path.join(basedir,lspq_miseq_analyse_dir)))
+os.system("sudo cp {0} {1}".format(sortfile,os.path.join(basedir,lspq_miseq_miseqruntrace_dir)))
 
 logging.info("              End Calculation")
 
