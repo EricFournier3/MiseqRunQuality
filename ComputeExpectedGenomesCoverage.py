@@ -50,10 +50,10 @@ read_count_file = os.path.join(project_path,slbio_fastqbrut_dir,'ReadCount.txt')
 
 for line in sample_sheet_handle:
     line = line.split(',')[:-1]
-    sample, organism = line[0],line[10]
+    sample, organism = line[0],line[10].split(' ')[0]
 
     #calcul du nombre total de nucleotides
-    cmd_1 = "sed -n /{0}/p {1}".format(sample,read_count_file) + " | awk 'NR==1{print $2*2*300}'"
+    cmd_1 = "sed -n /{0}_/p {1}".format(sample,read_count_file) + " | awk 'NR==1{print $2*2*300}'"
     total_read_length = subprocess.check_output(cmd_1, shell=True)
 
     #taille du genome de reference de cet organisme
