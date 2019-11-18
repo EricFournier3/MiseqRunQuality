@@ -35,11 +35,14 @@ logging.basicConfig(level=logging.INFO)
 parser = argparse.ArgumentParser(description="Calculateur des statistique de runs MiSeq")
 parser.add_argument("-r","--runno",help="Nom de la run dans S/Partage/LSPQ_MiSeq",required=True)
 parser.add_argument("-p","--param",help="path vers le fichier de parametre",required=True)
+parser.add_argument("-s","--subdir",help="Nom du sous repertoire de la cassette",required=True)
 
 args_commandline = parser.parse_args(sys.argv[1:])
 args = args_commandline.__dict__
 project_name =  args["runno"]
 path_param_file = args["param"]
+cartridge_subdir = args["subdir"]
+
 
 #exit(0)
 
@@ -51,7 +54,6 @@ lspq_miseq_experimental_dir = all_dict["lspq_miseq_subdir"][0]
 lspq_miseq_miseqruntrace_dir = all_dict["lspq_miseq_subdir"][1]
 lspq_miseq_sequencebrute_dir = all_dict["lspq_miseq_subdir"][2]
 lspq_miseq_analyse_dir = all_dict["lspq_miseq_subdir"][3]
-
 
 
 #Repertoire local temporaire pour les calculs
@@ -67,19 +69,25 @@ else:
 
 #Repertoire de la run
 basedir = os.path.join(all_dict["path"][0],project_name)
+slbio_basedir = os.path.join(all_dict["path"][1],project_name)
 
 #Quelques check-up
 if not os.path.isdir(basedir):
     logging.error(basedir + " est inexistant")
     exit(0)
 
+if not os.path.isdir(slbio_basedir):
+    logging.error(slbio_basedir + " est inexistant")
+    exit(0)
+
 #Repertoire contenant les fastq
-fastq_dir = os.path.join(basedir,lspq_miseq_sequencebrute_dir)
+#fastq_dir = os.path.join(basedir,lspq_miseq_sequencebrute_dir)
+fastq_dir = os.path.join(slbio_basedir,cartridge_subdir)
 if not os.path.isdir(fastq_dir):
     logging.error(fastq_dir + " est inexistant")
     exit(0)
 
-interop_dir = os.path.join(basedir,lspq_miseq_miseqruntrace_dir,"InterOp")
+interop_dir = os.path.join(basedir,lspq_miseq_miseqruntrace_dir,cartridge_subdir,"InterOp")
 if not os.path.join(basedir,interop_dir):
     logging.error(interop_dir + " est inexistant")
     exit(0)
@@ -90,14 +98,14 @@ if not os.listdir(fastq_dir):
     exit(0)
 
 #Le fichier  RunInfo.xml
-runinfo_file = os.path.join(basedir,lspq_miseq_miseqruntrace_dir,"RunInfo.xml")
+runinfo_file = os.path.join(basedir,lspq_miseq_miseqruntrace_dir,cartridge_subdir,"RunInfo.xml")
 #print "run info ", runinfo_file
 if not os.path.isfile(runinfo_file):
     logging.error("Le fichier {0} est absent".format(runinfo_file))
     exit(0)
 
 #Le fichier runParameters.xml
-runparam_file = os.path.join(basedir,lspq_miseq_miseqruntrace_dir,"runParameters.xml")
+runparam_file = os.path.join(basedir,lspq_miseq_miseqruntrace_dir,cartridge_subdir,"runParameters.xml")
 if not os.path.isfile(runinfo_file):
     logging.error("Le fichier {0} est absent".format(runparam_file))
     exit(0)
@@ -141,7 +149,7 @@ logging.info("              Calcul des metrics de la run")
 #Recuperation du Q30 pour la run
 run_metrics = py_interop_run_metrics.run_metrics()
 
-run_folder = run_metrics.read(os.path.join(basedir,lspq_miseq_miseqruntrace_dir))
+run_folder = run_metrics.read(os.path.join(basedir,lspq_miseq_miseqruntrace_dir,cartridge_subdir))
 summary = py_interop_summary.run_summary()
 py_interop_summary.summarize_run_metrics(run_metrics, summary)
 summary.total_summary().yield_g()
@@ -247,7 +255,7 @@ os.system("awk 'NR<2{print $0;next}{print $0 | \"sort -k1\" }' " + outfile.name 
 #    outfile_append.write("{0}\t{1}\n".format(my_spec_name,allspec_cov_dict[my_spec_name][1]))
 #outfile_append.close()
 
-os.system("sudo cp {0} {1}".format(sortfile,os.path.join(basedir,lspq_miseq_miseqruntrace_dir)))
+os.system("sudo cp {0} {1}".format(sortfile,os.path.join(basedir,lspq_miseq_miseqruntrace_dir,cartridge_subdir)))
 
 logging.info("              End Calculation")
 
