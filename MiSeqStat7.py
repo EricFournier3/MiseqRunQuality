@@ -57,8 +57,8 @@ lspq_miseq_analyse_dir = all_dict["lspq_miseq_subdir"][3]
 
 
 #Repertoire local temporaire pour les calculs
-temp_dir = "/home/foueri01@inspq.qc.ca/temp/TEMP_FASTQ"
-rScript = "/home/foueri01@inspq.qc.ca/GitScript/MiSeqRunQuality/ComputeReadsStat2.R"
+temp_dir = "/data/temp/TEMP_FASTQ"
+rScript = "/data/Applications/GitScript/MiSeqRunQuality/ComputeReadsStat2.R"
 
 
 if not os.path.isdir(temp_dir):

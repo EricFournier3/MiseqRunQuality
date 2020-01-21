@@ -6,7 +6,7 @@ import argparse
 
 logging.basicConfig(level=logging.INFO)
 
-bowtie2_db_path = '/home/foueri01@inspq.qc.ca/InternetProgram/Bowtie2/DATABASE'
+bowtie2_db_path = '/data/Databases/BOWTIE2_DB'
 
 doc = """    
 
