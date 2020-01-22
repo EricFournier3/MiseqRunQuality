@@ -60,12 +60,12 @@ lspq_miseq_analyse_dir = all_dict["lspq_miseq_subdir"][3]
 temp_dir = "/data/temp/TEMP_FASTQ"
 rScript = "/data/Applications/GitScript/MiSeqRunQuality/ComputeReadsStat2.R"
 
-
 if not os.path.isdir(temp_dir):
     os.system("mkdir {0}".format(temp_dir))
 else:
     os.system("rm -rf {0}".format(temp_dir))
     os.system("mkdir {0}".format(temp_dir))
+
 
 #Repertoire de la run
 basedir = os.path.join(all_dict["path"][0],project_name)
@@ -191,7 +191,12 @@ percent_pf = round(float(percent_pf),0)
 
 #Calculs des Q30 pour les samples avec R
 logging.info("              Calcul des metrics des samples dans R")
+
+
 os.system("Rscript {0} {1} {2} ".format(rScript,fastq_dir,temp_dir))
+
+#modif_20200121
+min_q30_spec_dict = {}
 
 #Contruction du dictionnaire de metrics
 try:
@@ -211,6 +216,16 @@ try:
             spec_name = fastq_file[:-3]
 
         min_q30_perc = line_parse.group(2)
+
+        # modif_20200121
+        spec = fastq_file.split('_')[0]
+        try:
+            min_q30_spec_dict[spec].append(min_q30_perc)
+        except:
+            min_q30_spec_dict[spec] = []
+            min_q30_spec_dict[spec].append(min_q30_perc)
+
+
         nb_read = line_parse.group(3)
         nb_nucleotid = line_parse.group(4)
         allfile_qc_dict[fastq_file] = [min_q30_perc,nb_read]
@@ -231,14 +246,27 @@ except:
 #Transfert des metrics dans le fichier de resultats final
 logging.info("              Lecture des metrics")
 
-outfile.write("ID\tNb_Reads\tCluster_Density_K_mm2\tCluster_Passing_Filter\tOver_Q30\n")
+#modif_20200121
+outfile.write("ID\tNb_Reads\tCluster_Density_K_mm2\tCluster_Passing_Filter\tOver_Q30\tR1_R2_Mean_Q30\n")
 
 for fastqfile in allfile_qc_dict.keys():
     if(fastqfile != "RUN"):
         #print fastqfile
+
+        #modif_20200121
+        spec = fastqfile.split('_')[0]
+        mean_Q30 = "---"
+        if re.search(r'_R1', fastqfile):
+            mean_Q30 = (int(min_q30_spec_dict[spec][0]) + int(min_q30_spec_dict[spec][1])) / 2
+
         min_q30_perc = allfile_qc_dict[fastqfile][0]
         nb_read = allfile_qc_dict[fastqfile][1]
-        outfile.write("{0}{1}{2}{1}{3}{1}{4}{1}{5}\n".format(fastqfile, "\t", nb_read, 'NA', 'NA',min_q30_perc))
+
+        # modif_20200121
+        if mean_Q30 == "---":
+            outfile.write("{0}{1}{2}{1}{3}{1}{4}{1}{5}{1}{6}\n".format(fastqfile, "\t", nb_read, 'NA', 'NA', min_q30_perc, ""))
+        else:
+            outfile.write("{0}{1}{2}{1}{3}{1}{4}{1}{5}{1}{6}\n".format(fastqfile, "\t", nb_read, 'NA', 'NA', min_q30_perc,"<" + str(mean_Q30) + ">"))
     else:
         min_q30_perc = allfile_qc_dict[fastqfile][0]
         nb_read = allfile_qc_dict[fastqfile][1]
