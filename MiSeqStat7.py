@@ -43,6 +43,8 @@ project_name =  args["runno"]
 path_param_file = args["param"]
 cartridge_subdir = args["subdir"]
 
+#print "CARTRIDGE IS ", cartridge_subdir
+
 
 #exit(0)
 
