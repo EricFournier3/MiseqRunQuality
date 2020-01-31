@@ -43,6 +43,8 @@ project_name =  args["runno"]
 path_param_file = args["param"]
 cartridge_subdir = args["subdir"]
 
+project_year = project_name[0:4]
+
 #print "CARTRIDGE IS ", cartridge_subdir
 
 
@@ -70,7 +72,7 @@ else:
 
 
 #Repertoire de la run
-basedir = os.path.join(all_dict["path"][0],project_name)
+basedir = os.path.join(all_dict["path"][0],project_year,project_name)
 slbio_basedir = os.path.join(all_dict["path"][1],project_name)
 
 #Quelques check-up
@@ -150,7 +152,6 @@ logging.info("              Calcul des metrics de la run")
 
 #Recuperation du Q30 pour la run
 run_metrics = py_interop_run_metrics.run_metrics()
-
 run_folder = run_metrics.read(os.path.join(basedir,lspq_miseq_miseqruntrace_dir,cartridge_subdir))
 summary = py_interop_summary.run_summary()
 py_interop_summary.summarize_run_metrics(run_metrics, summary)
@@ -284,6 +285,7 @@ os.system("awk 'NR<2{print $0;next}{print $0 | \"sort -k1\" }' " + outfile.name 
 #for my_spec_name in allspec_cov_dict.keys():
 #    outfile_append.write("{0}\t{1}\n".format(my_spec_name,allspec_cov_dict[my_spec_name][1]))
 #outfile_append.close()
+
 
 os.system("sudo cp {0} {1}".format(sortfile,os.path.join(basedir,lspq_miseq_miseqruntrace_dir,cartridge_subdir)))
 
