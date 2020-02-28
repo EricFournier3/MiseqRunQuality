@@ -37,11 +37,17 @@ parser.add_argument("-r","--runno",help="Nom de la run dans S/Partage/LSPQ_MiSeq
 parser.add_argument("-p","--param",help="path vers le fichier de parametre",required=True)
 parser.add_argument("-s","--subdir",help="Nom du sous repertoire de la cassette",required=True)
 
+parser.add_argument("-t","--tempdir",help="Repertoire temporaire de calcul",required=True)
+
+
 args_commandline = parser.parse_args(sys.argv[1:])
 args = args_commandline.__dict__
 project_name =  args["runno"]
 path_param_file = args["param"]
 cartridge_subdir = args["subdir"]
+
+stat_temp_dir=args["tempdir"]
+
 
 project_year = project_name[0:4]
 
@@ -73,7 +79,10 @@ else:
 
 #Repertoire de la run
 basedir = os.path.join(all_dict["path"][0],project_year,project_name)
-slbio_basedir = os.path.join(all_dict["path"][1],project_name)
+
+#slbio_basedir = os.path.join(all_dict["path"][1],project_name)
+slbio_basedir = stat_temp_dir
+
 
 #Quelques check-up
 if not os.path.isdir(basedir):
